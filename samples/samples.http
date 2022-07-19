@@ -1,0 +1,75 @@
+# sample OAuth2 'code' authentication flow with PKCE password less client
+# this file is InteliJ http client script
+
+### get login form to extract CSRF token
+GET {{login_endpoint}}
+
+> {%
+var rx = /\n.*<input name="_csrf" type="hidden" value="(.*)".*/;
+var arr = rx.exec(response.body)
+client.global.set("csrf", arr[1])
+client.test("Request executed successfully", function() {
+  client.assert(response.status === 200, "Response status is not 200");
+});
+%}
+
+### login request
+// @no-redirect
+POST {{login_endpoint}}
+Content-Type: application/x-www-form-urlencoded
+
+username={{username}}&password={{password}}&_csrf={{csrf}}
+
+> {%
+client.log(response.headers.valueOf("Location"))
+client.test("Redirect expected", function() {
+  client.assert(response.status === 302, "Response status is not 302");
+});
+%}
+
+### obtain 'code'
+// @no-redirect
+GET {{auth_endpoint}}?response_type=code&client_id={{client_id}}&scope=openid&state=tqJNrGMavynKMg2AsPfWZSy91oCiBYP7tZMuvcsr3Ms=&redirect_uri={{redirect_uri}}&nonce={{nonce}}&code_challenge={{code_challenge}}&code_challenge_method=S256
+
+> {%
+client.log(response.headers.valueOf("Location"))
+var rx = /.*code=(.*)&.*/;
+var arr = rx.exec(response.headers.valueOf("Location"))
+client.log(arr)
+client.global.set("code", arr[1])
+client.log(arr[1])
+client.test("Redirect expected", function() {
+  client.assert(response.status === 302, "Response status is not 302");
+});
+%}
+
+### obtain `token`
+// @no-cookie-jar
+POST {{token_endpoint}}
+Content-type: application/x-www-form-urlencoded
+Accept: application/json
+
+grant_type=authorization_code&code={{code}}&redirect_uri={{redirect_uri}}&client_id={{client_id}}&code_verifier={{code_verifier}}
+
+> {%
+
+client.test("success expected", function() {
+  client.assert(response.status === 200, "Response status is not 200");
+  client.log(response.body.access_token.length)
+  client.assert(response.body.access_token.length > 5, "access token is too short")
+});
+%}
+
+### attempt to obtain `token` with already used code should lead to failuere
+// @no-cookie-jar
+POST {{token_endpoint}}
+Content-type: application/x-www-form-urlencoded
+Accept: application/json
+
+grant_type=authorization_code&code={{code}}&redirect_uri={{redirect_uri}}&client_id={{client_id}}&code_verifier={{code_verifier}}
+> {%
+client.test("failure expected", function() {
+  client.assert(response.status === 400, "Response status is not 400");
+});
+%}
+
