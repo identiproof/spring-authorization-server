@@ -52,6 +52,7 @@ import org.springframework.security.oauth2.server.authorization.authentication.O
 import org.springframework.security.oauth2.server.authorization.web.authentication.DelegatingAuthenticationConverter;
 import org.springframework.security.oauth2.server.authorization.web.authentication.OAuth2AuthorizationCodeAuthenticationConverter;
 import org.springframework.security.oauth2.server.authorization.web.authentication.OAuth2ClientCredentialsAuthenticationConverter;
+import org.springframework.security.oauth2.server.authorization.web.authentication.OAuth2PreAuthCodeAuthenticationConverter;
 import org.springframework.security.oauth2.server.authorization.web.authentication.OAuth2RefreshTokenAuthenticationConverter;
 import org.springframework.security.web.authentication.AuthenticationConverter;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
@@ -135,7 +136,8 @@ public final class OAuth2TokenEndpointFilter extends OncePerRequestFilter {
 				Arrays.asList(
 						new OAuth2AuthorizationCodeAuthenticationConverter(),
 						new OAuth2RefreshTokenAuthenticationConverter(),
-						new OAuth2ClientCredentialsAuthenticationConverter()));
+						new OAuth2ClientCredentialsAuthenticationConverter(),
+						new OAuth2PreAuthCodeAuthenticationConverter()));
 	}
 
 	@Override

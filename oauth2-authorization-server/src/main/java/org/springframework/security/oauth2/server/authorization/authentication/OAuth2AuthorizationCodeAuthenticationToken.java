@@ -46,7 +46,12 @@ public class OAuth2AuthorizationCodeAuthenticationToken extends OAuth2Authorizat
 	 */
 	public OAuth2AuthorizationCodeAuthenticationToken(String code, Authentication clientPrincipal,
 			@Nullable String redirectUri, @Nullable Map<String, Object> additionalParameters) {
-		super(AuthorizationGrantType.AUTHORIZATION_CODE, clientPrincipal, additionalParameters);
+		this(AuthorizationGrantType.AUTHORIZATION_CODE, code, clientPrincipal, redirectUri, additionalParameters);
+	}
+
+	OAuth2AuthorizationCodeAuthenticationToken(AuthorizationGrantType authorizationGrantType, String code,
+			Authentication clientPrincipal, @Nullable String redirectUri, @Nullable Map<String, Object> additionalParameters) {
+		super(authorizationGrantType, clientPrincipal, additionalParameters);
 		Assert.hasText(code, "code cannot be empty");
 		this.code = code;
 		this.redirectUri = redirectUri;

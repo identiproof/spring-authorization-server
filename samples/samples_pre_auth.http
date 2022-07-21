@@ -1,0 +1,97 @@
+# this file is InteliJ http client script
+
+// @no-cookie-jar
+GET {{issuer_preauth_endpoint}}?code_challenge={{code_challenge}}&nonce=9871&pin={{pin}}
+
+> {%
+  client.global.set("code", response.body)
+  client.test("register pre-auth with PIN using backoffice endpoint", function() {
+    client.assert(response.status === 200, "Response status is not 200");
+  });
+%}
+
+###
+
+// @no-cookie-jar
+POST {{token_endpoint}}
+Content-type: application/x-www-form-urlencoded
+Accept: application/json
+
+grant_type=urn:ietf:params:oauth:grant-type:pre-authorized_code&pre-authorized_code={{code}}&client_id={{client_id}}&code_verifier={{code_verifier}}&pin={{pin}}
+
+> {%
+client.log(response.body.c_nonce);
+  var expectedNonce = 9871
+  client.test("obtain token with correct PIN - success expected", function() {
+    client.assert(response.status === 200, "Response status is not 200");
+    client.assert(response.body.access_token.length > 5, "access token is too short")
+    client.assert(response.body.c_nonce == expectedNonce, "specifed nonce is expectd")
+  });
+%}
+
+###
+// @no-cookie-jar
+GET {{issuer_preauth_endpoint}}?code_challenge={{code_challenge}}&nonce={{nonce}}
+
+> {%
+  client.global.set("code", response.body)
+  client.test("register pre-auth without PIN using backoffice endpoint", function() {
+    client.assert(response.status === 200, "Response status is not 200");
+  });
+%}
+
+### obtain `token` - wrong pin (negative test)
+// @no-cookie-jar
+POST {{token_endpoint}}
+Content-type: application/x-www-form-urlencoded
+Accept: application/json
+
+grant_type=urn:ietf:params:oauth:grant-type:pre-authorized_code&pre-authorized_code={{code}}&client_id={{client_id}}&code_verifier={{code_verifier}}&pin=123456
+
+> {%
+  client.test("obtain token, provided pin should be ignored  - success expected", function() {
+    client.assert(response.status === 200, "Response status is not 200");
+    client.assert(response.body.access_token.length > 5, "access token is too short")
+  });
+%}
+
+###
+
+// @no-cookie-jar
+GET {{issuer_preauth_endpoint}}?code_challenge={{code_challenge}}&nonce={{nonce}}&pin={{pin}}
+
+> {%
+  client.global.set("code", response.body)
+  client.test("register pre-auth with PIN using backoffice endpoint", function() {
+    client.assert(response.status === 200, "Response status is not 200");
+  });
+%}
+
+### obtain `token` - wrong pin (negative test)
+
+// @no-cookie-jar
+POST {{token_endpoint}}
+Content-type: application/x-www-form-urlencoded
+Accept: application/json
+
+grant_type=urn:ietf:params:oauth:grant-type:pre-authorized_code&pre-authorized_code={{code}}&client_id={{client_id}}&code_verifier={{code_verifier}}&pin=11{{pin}}11
+
+> {%
+  client.test("try to obtain token with wrong PIN - negative test ", function() {
+    client.assert(response.status === 400, "Response status is not 400");
+  });
+%}
+
+###
+// @no-cookie-jar
+POST {{token_endpoint}}
+Content-type: application/x-www-form-urlencoded
+Accept: application/json
+
+grant_type=urn:ietf:params:oauth:grant-type:pre-authorized_code&pre-authorized_code={{code}}&client_id={{client_id}}&code_verifier={{code_verifier}}&pin={pin}}
+
+> {%
+  client.test("try to obtain token with wrong correct PIN but code is already invalidated by previous wrong attempt - negative test ", function() {
+    client.assert(response.status === 400, "Response status is not 400");
+  });
+%}

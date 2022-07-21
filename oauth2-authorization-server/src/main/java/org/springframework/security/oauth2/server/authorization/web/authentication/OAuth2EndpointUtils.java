@@ -26,6 +26,7 @@ import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.security.oauth2.core.endpoint.PkceParameterNames;
+import org.springframework.security.oauth2.server.authorization.web.authentication.OAuth2PreAuthCodeAuthenticationConverter.OAuth2PreAuthCodeParameterNames;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
@@ -71,8 +72,14 @@ final class OAuth2EndpointUtils {
 				request.getParameter(OAuth2ParameterNames.CODE) != null;
 	}
 
+	static boolean matchesAuthorizationPreAuthCodeGrantRequest(HttpServletRequest request) {
+		return OAuth2PreAuthCodeAuthenticationConverter.PRE_AUTH_CODE_GRANT_TYPE.getValue().equals(
+				request.getParameter(OAuth2ParameterNames.GRANT_TYPE)) &&
+				request.getParameter(OAuth2PreAuthCodeParameterNames.PRE_AUTHORIZED_CODE) != null;
+	}
+
 	static boolean matchesPkceTokenRequest(HttpServletRequest request) {
-		return matchesAuthorizationCodeGrantRequest(request) &&
+		return (matchesAuthorizationCodeGrantRequest(request) || matchesAuthorizationPreAuthCodeGrantRequest(request)) &&
 				request.getParameter(PkceParameterNames.CODE_VERIFIER) != null;
 	}
 

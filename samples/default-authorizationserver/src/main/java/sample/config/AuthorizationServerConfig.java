@@ -21,6 +21,7 @@ import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
+import org.springframework.security.oauth2.server.authorization.web.authentication.OAuth2PreAuthCodeAuthenticationConverter;
 import sample.jose.Jwks;
 
 import org.springframework.context.annotation.Bean;
@@ -91,6 +92,7 @@ public class AuthorizationServerConfig {
 				.clientAuthenticationMethod(ClientAuthenticationMethod.NONE)
 				.authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
 				.authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
+				.authorizationGrantType(OAuth2PreAuthCodeAuthenticationConverter.PRE_AUTH_CODE_GRANT_TYPE)
 				.redirectUri("http://127.0.0.1:8080/login/oauth2/code/messaging-client-oidc")
 				.redirectUri("http://127.0.0.1:8080/authorized")
 				.scope(OidcScopes.OPENID)

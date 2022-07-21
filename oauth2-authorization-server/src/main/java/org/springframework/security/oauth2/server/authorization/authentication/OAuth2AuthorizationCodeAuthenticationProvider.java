@@ -16,7 +16,8 @@
 package org.springframework.security.oauth2.server.authorization.authentication;
 
 import java.security.Principal;
-import java.util.Collections;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -111,12 +112,19 @@ public final class OAuth2AuthorizationCodeAuthenticationProvider implements Auth
 				OAuth2AuthorizationRequest.class.getName());
 
 		if (!registeredClient.getClientId().equals(authorizationRequest.getClientId())) {
-			if (!authorizationCode.isInvalidated()) {
-				// Invalidate the authorization code given that a different client is attempting to use it
-				authorization = OAuth2AuthenticationProviderUtils.invalidate(authorization, authorizationCode.getToken());
-				this.authorizationService.save(authorization);
-			}
+			// Invalidate the authorization code given that a different client is attempting to use it
+			invalidateCode(authorization, authorizationCode);
 			throw new OAuth2AuthenticationException(OAuth2ErrorCodes.INVALID_GRANT);
+		}
+
+		String expectedPin = getAdditionalParam(authorizationRequest, "pin");
+		if (StringUtils.hasText(expectedPin)) {
+			final String actualPin = (String) ((OAuth2AuthorizationCodeAuthenticationToken) authentication).getAdditionalParameters().get("pin");
+			if (!expectedPin.equals(actualPin)) {
+				// Invalidate the authorization code given that someone tries wrong PIN - just to avoid brute force
+				invalidateCode(authorization, authorizationCode);
+				throw new OAuth2AuthenticationException(OAuth2ErrorCodes.INVALID_GRANT);
+			}
 		}
 
 		if (StringUtils.hasText(authorizationRequest.getRedirectUri()) &&
@@ -206,14 +214,31 @@ public final class OAuth2AuthorizationCodeAuthenticationProvider implements Auth
 
 		this.authorizationService.save(authorization);
 
-		Map<String, Object> additionalParameters = Collections.emptyMap();
+		Map<String, Object> additionalParameters = new HashMap<>();
 		if (idToken != null) {
-			additionalParameters = new HashMap<>();
 			additionalParameters.put(OidcParameterNames.ID_TOKEN, idToken.getTokenValue());
+		}
+
+		String nonce = getAdditionalParam(authorizationRequest, "nonce");
+		if (StringUtils.hasText(nonce)) {
+			additionalParameters.put("c_nonce", nonce);
+			additionalParameters.put("c_nonce_expires_in",
+					ChronoUnit.SECONDS.between( Instant.now(), accessToken.getExpiresAt()));
 		}
 
 		return new OAuth2AccessTokenAuthenticationToken(
 				registeredClient, clientPrincipal, accessToken, refreshToken, additionalParameters);
+	}
+
+	private void invalidateCode(OAuth2Authorization authorization, final OAuth2Authorization.Token<OAuth2AuthorizationCode> authorizationCode) {
+		if (!authorizationCode.isInvalidated()) {
+			authorization = OAuth2AuthenticationProviderUtils.invalidate(authorization, authorizationCode.getToken());
+			this.authorizationService.save(authorization);
+		}
+	}
+
+	private String getAdditionalParam(final OAuth2AuthorizationRequest authorizationRequest, final String nonce) {
+		return (String) authorizationRequest.getAdditionalParameters().get(nonce);
 	}
 
 	@Override

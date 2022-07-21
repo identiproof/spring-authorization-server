@@ -32,6 +32,7 @@ import org.springframework.security.oauth2.core.endpoint.PkceParameterNames;
 import org.springframework.security.oauth2.server.authorization.OAuth2Authorization;
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
+import org.springframework.security.oauth2.server.authorization.web.authentication.OAuth2PreAuthCodeAuthenticationConverter;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -70,12 +71,12 @@ final class CodeVerifierAuthenticator {
 			RegisteredClient registeredClient) {
 
 		Map<String, Object> parameters = clientAuthentication.getAdditionalParameters();
-		if (!authorizationCodeGrant(parameters)) {
+		if (!authorizationCodeGrant(parameters) && !authorizationPreAuthCodeGrant(parameters)) {
 			return false;
 		}
 
 		OAuth2Authorization authorization = this.authorizationService.findByToken(
-				(String) parameters.get(OAuth2ParameterNames.CODE),
+				getCodeValue(parameters),
 				AUTHORIZATION_CODE_TOKEN_TYPE);
 		if (authorization == null) {
 			throwInvalidGrant(OAuth2ParameterNames.CODE);
@@ -104,10 +105,27 @@ final class CodeVerifierAuthenticator {
 		return true;
 	}
 
+	private String getCodeValue(final Map<String, Object> parameters) {
+		if (AuthorizationGrantType.AUTHORIZATION_CODE.getValue().equals(
+				parameters.get(OAuth2ParameterNames.GRANT_TYPE))) {
+			return (String) parameters.get(OAuth2ParameterNames.CODE);
+		} else if (OAuth2PreAuthCodeAuthenticationConverter.PRE_AUTH_CODE_GRANT_TYPE.getValue().equals(
+				parameters.get(OAuth2ParameterNames.GRANT_TYPE))) {
+			return (String) parameters.get(OAuth2PreAuthCodeAuthenticationConverter.OAuth2PreAuthCodeParameterNames.PRE_AUTHORIZED_CODE);
+		}
+		return null;
+	}
+
 	private static boolean authorizationCodeGrant(Map<String, Object> parameters) {
 		return AuthorizationGrantType.AUTHORIZATION_CODE.getValue().equals(
 				parameters.get(OAuth2ParameterNames.GRANT_TYPE)) &&
 				parameters.get(OAuth2ParameterNames.CODE) != null;
+	}
+
+	private static boolean authorizationPreAuthCodeGrant(Map<String, Object> parameters) {
+		return OAuth2PreAuthCodeAuthenticationConverter.PRE_AUTH_CODE_GRANT_TYPE.getValue().equals(
+				parameters.get(OAuth2ParameterNames.GRANT_TYPE)) &&
+				parameters.get(OAuth2PreAuthCodeAuthenticationConverter.OAuth2PreAuthCodeParameterNames.PRE_AUTHORIZED_CODE) != null;
 	}
 
 	private static boolean codeVerifierValid(String codeVerifier, String codeChallenge, String codeChallengeMethod) {
