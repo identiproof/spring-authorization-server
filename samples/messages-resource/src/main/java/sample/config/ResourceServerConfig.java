@@ -15,10 +15,22 @@
  */
 package sample.config;
 
+import org.apache.tomcat.util.net.SSLImplementation;
 import org.springframework.context.annotation.Bean;
+import org.springframework.core.convert.converter.Converter;
+import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.oauth2.core.user.OAuth2UserAuthority;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.AbstractOAuth2TokenAuthenticationToken;
 import org.springframework.security.web.SecurityFilterChain;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @author Joe Grandja
@@ -31,14 +43,32 @@ public class ResourceServerConfig {
 	@Bean
 	SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		http
-			.mvcMatcher("/messages/**")
+			.mvcMatcher("/credential/**")
 				.authorizeRequests()
-					.mvcMatchers("/messages/**").access("hasAuthority('SCOPE_message.read')")
+					.mvcMatchers("/credential/**").access("hasAuthority('SCOPE_message.read')")
 					.and()
 			.oauth2ResourceServer()
-				.jwt();
+				.jwt()
+				.jwtAuthenticationConverter(createConverter());
 		return http.build();
 	}
 	// @formatter:on
+
+	public Converter<Jwt, AbstractAuthenticationToken> createConverter(){
+		return jwt -> new IssuerAuthenticationToken(jwt,jwt.getSubject(), ((List<String>) jwt.getClaims().get("scope")));
+	}
+
+	public static class IssuerAuthenticationToken extends AbstractOAuth2TokenAuthenticationToken<Jwt> {
+
+		protected IssuerAuthenticationToken(final Jwt token, final String principal, List<String> role) {
+			super(token, principal, null, role.stream().map(string -> new SimpleGrantedAuthority("SCOPE_"+string)).collect(Collectors.toList()));
+			this.setAuthenticated(true);
+		}
+
+		@Override
+		public Map<String, Object> getTokenAttributes() {
+			return this.getToken().getClaims();
+		}
+	}
 
 }
