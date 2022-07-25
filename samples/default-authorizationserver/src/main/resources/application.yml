@@ -8,3 +8,14 @@ logging:
     org.springframework.security: INFO
     org.springframework.security.oauth2: INFO
 #    org.springframework.boot.autoconfigure: DEBUG
+
+
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: update
+  datasource:
+    url: jdbc:mysql://localhost:3306/auth
+    username: user
+    password: password
+    driver-class-name: com.mysql.cj.jdbc.Driver
