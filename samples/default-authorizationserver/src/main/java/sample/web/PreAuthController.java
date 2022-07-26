@@ -25,6 +25,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 
 /**
@@ -49,10 +50,13 @@ public class PreAuthController {
 			@RequestParam(value = "pin", required = false) String pin,
 			@RequestParam(value = "type", required = false) String type,
 			@RequestParam(value = "nonce", required = false) String nonce,
-			@RequestParam(value = "code_challenge", required = false) String code_challenge) {
+			@RequestParam(value = "code_challenge", required = false) String code_challenge,
+			@RequestParam(value = "credential_type", required = true) String credential_type) {
 		/* Most of this logic is copied from OAuth2AuthorizationCodeRequestAuthenticationProvider */
 
 		final HashMap<String, Object> params = new HashMap<>();
+
+		params.put("credential_type",credential_type);
 
 		if (StringUtils.hasText(code_challenge)) {
 			params.put("code_challenge", code_challenge);
@@ -81,6 +85,7 @@ public class PreAuthController {
 				OAuth2AuthorizationCodeRequestAuthenticationToken.with(registeredClient.getClientId(), principal)
 						.authorizationUri("/auth")
 //						.scopes(new HashSet<>(Arrays.asList("scopes")))
+						.scopes(Collections.singleton(credential_type))
 						.state("abcd")
 						.additionalParameters(params)
 						.consent(false)

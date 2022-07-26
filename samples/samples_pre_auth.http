@@ -1,7 +1,7 @@
 # this file is InteliJ http client script
 
 // @no-cookie-jar
-GET {{issuer_preauth_endpoint}}?code_challenge={{code_challenge}}&nonce=9871&pin={{pin}}
+GET {{issuer_preauth_endpoint}}?code_challenge={{code_challenge}}&nonce=9871&pin={{pin}}&credential_type={{credential_type}}
 
 > {%
   client.global.set("code", response.body)
