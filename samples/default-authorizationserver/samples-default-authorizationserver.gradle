@@ -18,6 +18,8 @@ dependencies {
 	implementation "org.springframework.boot:spring-boot-starter-jdbc"
 	implementation project(":spring-security-oauth2-authorization-server")
 	implementation("mysql:mysql-connector-java")
+	implementation("org.flywaydb:flyway-core")
+	implementation("org.flywaydb:flyway-mysql")
 	testImplementation "org.springframework.boot:spring-boot-starter-test"
 	testImplementation "org.springframework.security:spring-security-test"
 	testImplementation "junit:junit"
