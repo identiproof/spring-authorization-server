@@ -15,19 +15,16 @@
  */
 package sample.config;
 
-import org.apache.tomcat.util.net.SSLImplementation;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.oauth2.core.user.OAuth2UserAuthority;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.AbstractOAuth2TokenAuthenticationToken;
 import org.springframework.security.web.SecurityFilterChain;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -45,7 +42,7 @@ public class ResourceServerConfig {
 		http
 			.mvcMatcher("/credential/**")
 				.authorizeRequests()
-					.mvcMatchers("/credential/**").access("hasAuthority('SCOPE_message.read')")
+					.mvcMatchers("/credential/**").authenticated()
 					.and()
 			.oauth2ResourceServer()
 				.jwt()

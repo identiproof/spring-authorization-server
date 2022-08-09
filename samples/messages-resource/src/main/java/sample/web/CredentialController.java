@@ -20,11 +20,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * @author Joe Grandja
+ * @author Grzegorz
  * @since 0.0.1
  */
 @RestController
-public class MessagesController {
+public class CredentialController {
 
 	@GetMapping("/credential")
 
