@@ -15,12 +15,15 @@
  */
 package sample.web;
 
+import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.validation.Valid;
 import java.util.StringJoiner;
 
 /**
@@ -30,15 +33,24 @@ import java.util.StringJoiner;
 @RestController
 public class CredentialController {
 
-	@GetMapping("/credential")
+	@PostMapping(value = "/credential",
+			consumes = MediaType.APPLICATION_JSON_VALUE,
+			produces = MediaType.APPLICATION_JSON_VALUE)
 
-	public String[] getVc(@AuthenticationPrincipal String userId, Authentication authentication) {
+	public CredentialResponse getVc(
+			@AuthenticationPrincipal String userId,
+			Authentication authentication,
+			@Valid @RequestBody CredentialRequest credentialRequest
+	) {
 
 		StringJoiner allowedCredentialTypes = new StringJoiner(" ");
 		for (GrantedAuthority authority : authentication.getAuthorities()) {
 			allowedCredentialTypes.add(authority.getAuthority());
 		}
-		return new String[]{"user id" + userId,
-				allowedCredentialTypes.toString()};
+
+		// TODO verify pop
+		// TODO verify requested credential type vs allowed credential types
+
+		return new CredentialResponse(credentialRequest.credentialFormat, "LUpixVCWJk0eOt4CXQe1NXK....WZwmhmn9OQp6YxX0a2L " + userId + " " + credentialRequest.credentialType, "fGFF7UkhLa", 6661);
 	}
 }
