@@ -2,6 +2,8 @@ plugins {
 	id "org.springframework.boot" version "2.7.0"
 	id "io.spring.dependency-management" version "1.0.11.RELEASE"
 	id "java"
+	id("com.bmuschko.docker-spring-boot-application") version "7.1.0"
+	id("com.avast.gradle.docker-compose") version "0.16.4"
 }
 
 group = project.rootProject.group
@@ -12,15 +14,26 @@ repositories {
 	mavenCentral()
 }
 
+docker {
+	springBootApplication {
+		baseImage = 'openjdk:11-jdk-slim'
+		ports = [9000]
+		images = ["test"]
+	}
+}
+
 dependencies {
 	implementation "org.springframework.boot:spring-boot-starter-web"
 	implementation "org.springframework.boot:spring-boot-starter-security"
 	implementation "org.springframework.boot:spring-boot-starter-jdbc"
 	implementation project(":spring-security-oauth2-authorization-server")
-	runtimeOnly "com.h2database:h2"
-
+	implementation("mysql:mysql-connector-java")
+	implementation("org.flywaydb:flyway-core")
+	implementation("org.flywaydb:flyway-mysql")
 	testImplementation "org.springframework.boot:spring-boot-starter-test"
 	testImplementation "org.springframework.security:spring-security-test"
 	testImplementation "junit:junit"
 	testImplementation "net.sourceforge.htmlunit:htmlunit"
 }
+
+dockerCompose.isRequiredBy(test)

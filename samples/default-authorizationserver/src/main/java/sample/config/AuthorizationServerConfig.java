@@ -132,7 +132,7 @@ public class AuthorizationServerConfig {
 		return ProviderSettings.builder().issuer("http://localhost:9000").build();
 	}
 
-	@Bean
+	/*@Bean
 	public EmbeddedDatabase embeddedDatabase() {
 		// @formatter:off
 		return new EmbeddedDatabaseBuilder()
@@ -144,6 +144,6 @@ public class AuthorizationServerConfig {
 				.addScript("org/springframework/security/oauth2/server/authorization/client/oauth2-registered-client-schema.sql")
 				.build();
 		// @formatter:on
-	}
+	}*/
 
 }

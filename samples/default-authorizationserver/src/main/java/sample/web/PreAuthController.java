@@ -2,7 +2,6 @@ package sample.web;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.crypto.keygen.Base64StringKeyGenerator;
 import org.springframework.security.crypto.keygen.StringKeyGenerator;
@@ -22,10 +21,10 @@ import org.springframework.web.bind.annotation.RestController;
 import java.security.Principal;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Arrays;
 import java.util.Base64;
-import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Set;
 
 /**
  * @author Darek Zbik
@@ -36,7 +35,7 @@ public class PreAuthController {
 	private final RegisteredClientRepository registeredClientRepository;
 	private final StringKeyGenerator authorizationCodeGenerator =
 			new Base64StringKeyGenerator(Base64.getUrlEncoder().withoutPadding(), 96);
-	private final StringKeyGenerator noncnik =
+	private final StringKeyGenerator noncegenerator =
 			new Base64StringKeyGenerator(Base64.getUrlEncoder().withoutPadding(), 32);
 
 	public PreAuthController(final OAuth2AuthorizationService authorizationService, RegisteredClientRepository registeredClientRepository) {
@@ -47,11 +46,11 @@ public class PreAuthController {
 	@GetMapping("/issuer/preauth")
 	public String initPreauthToken(
 			@RequestParam(value = "pin", required = false) String pin,
-			@RequestParam(value = "type", required = false) String type,
+			@RequestParam(value = "type", required = true) Set<String> types,
 			@RequestParam(value = "nonce", required = false) String nonce,
+			@RequestParam(value = "user_id", required = false) String userId,
 			@RequestParam(value = "code_challenge", required = false) String code_challenge) {
 		/* Most of this logic is copied from OAuth2AuthorizationCodeRequestAuthenticationProvider */
-
 		final HashMap<String, Object> params = new HashMap<>();
 
 		if (StringUtils.hasText(code_challenge)) {
@@ -68,20 +67,19 @@ public class PreAuthController {
 			params.put("nonce", nonce);
 		}
 		else {
-			params.put("nonce", noncnik.generateKey());
+			params.put("nonce", noncegenerator.generateKey());
 		}
 
 		final RegisteredClient registeredClient = registeredClientRepository.findByClientId("web-client");
-
-		final Collection<SimpleGrantedAuthority> authorities = Arrays.asList(new SimpleGrantedAuthority("ROLE_USER"));
-		final User user = new User("user1", "h", authorities);
-		final UsernamePasswordAuthenticationToken principal = new UsernamePasswordAuthenticationToken(user, "password", authorities);
+		final User user = new User(StringUtils.trimAllWhitespace(userId), "*****",
+				Collections.emptyList());
+		final UsernamePasswordAuthenticationToken principal = new UsernamePasswordAuthenticationToken(user, null,
+				Collections.emptyList());
 
 		OAuth2AuthorizationCodeRequestAuthenticationToken authorizationCodeRequestAuthentication =
 				OAuth2AuthorizationCodeRequestAuthenticationToken.with(registeredClient.getClientId(), principal)
 						.authorizationUri("/auth")
-//						.scopes(new HashSet<>(Arrays.asList("scopes")))
-						.state("abcd")
+						.scopes(Collections.unmodifiableSet(types))
 						.additionalParameters(params)
 						.consent(false)
 						.build();
