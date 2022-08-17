@@ -79,8 +79,12 @@ final class OAuth2EndpointUtils {
 	}
 
 	static boolean matchesPkceTokenRequest(HttpServletRequest request) {
-		return (matchesAuthorizationCodeGrantRequest(request) || matchesAuthorizationPreAuthCodeGrantRequest(request)) &&
+		return (matchesAuthorizationCodeGrantRequest(request)) &&
 				request.getParameter(PkceParameterNames.CODE_VERIFIER) != null;
+	}
+
+	static boolean matchesAnonymousPreAuthRequest(HttpServletRequest request) {
+		return matchesAuthorizationPreAuthCodeGrantRequest(request);
 	}
 
 	static void throwError(String errorCode, String parameterName, String errorUri) {

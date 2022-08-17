@@ -1,5 +1,6 @@
 package sample.web;
 
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.User;
@@ -14,7 +15,8 @@ import org.springframework.security.oauth2.server.authorization.authentication.O
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.util.StringUtils;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -26,11 +28,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Set;
 
+import static org.springframework.security.oauth2.server.authorization.web.authentication.AnonymousPreAuthAuthenticationConverter.DEFAULT_PRE_AUTH_CLIENT;
+
 /**
  * @author Darek Zbik
  */
 @RestController
-public class PreAuthController {
+public class PreAuthController implements Cloneable{
 	private final OAuth2AuthorizationService authorizationService;
 	private final RegisteredClientRepository registeredClientRepository;
 	private final StringKeyGenerator authorizationCodeGenerator =
@@ -43,7 +47,8 @@ public class PreAuthController {
 		this.registeredClientRepository = registeredClientRepository;
 	}
 
-	@GetMapping("/issuer/preauth")
+	@CrossOrigin // to allow calls from swagger running separately
+	@PostMapping(path = "/issuer/preauth", produces = MediaType.TEXT_PLAIN_VALUE)
 	public String initPreauthToken(
 			@RequestParam(value = "pin", required = false) String pin,
 			@RequestParam(value = "type", required = true) Set<String> types,
@@ -70,7 +75,7 @@ public class PreAuthController {
 			params.put("nonce", noncegenerator.generateKey());
 		}
 
-		final RegisteredClient registeredClient = registeredClientRepository.findByClientId("web-client");
+		final RegisteredClient registeredClient = registeredClientRepository.findByClientId(DEFAULT_PRE_AUTH_CLIENT);
 		final User user = new User(StringUtils.trimAllWhitespace(userId), "*****",
 				Collections.emptyList());
 		final UsernamePasswordAuthenticationToken principal = new UsernamePasswordAuthenticationToken(user, null,

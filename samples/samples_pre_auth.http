@@ -1,7 +1,7 @@
 # this file is InteliJ http client script
 
 // @no-cookie-jar
-GET {{issuer_preauth_endpoint}}?code_challenge={{code_challenge}}&nonce=9871&pin={{pin}}&type={{credential_type}}&type={{credential_type2}}&user_id=some_id_of_the_user
+POST {{issuer_preauth_endpoint}}?code_challenge={{code_challenge}}&nonce=9871&pin={{pin}}&type={{credential_type}}&type={{credential_type2}}&user_id=some_id_of_the_user
 
 > {%
   client.global.set("code", response.body)
@@ -17,7 +17,7 @@ POST {{token_endpoint}}
 Content-type: application/x-www-form-urlencoded
 Accept: application/json
 
-grant_type=urn:ietf:params:oauth:grant-type:pre-authorized_code&pre-authorized_code={{code}}&client_id={{client_id}}&code_verifier={{code_verifier}}&pin={{pin}}
+grant_type=urn:ietf:params:oauth:grant-type:pre-authorized_code&pre-authorized_code={{code}}&code_verifier={{code_verifier}}&pin={{pin}}
 
 > {%
 client.log(response.body.c_nonce);
@@ -32,7 +32,7 @@ client.log(response.body.c_nonce);
 
 ###
 // @no-cookie-jar
-GET {{issuer_preauth_endpoint}}?code_challenge={{code_challenge}}&nonce={{nonce}}&type={{credential_type}}
+POST {{issuer_preauth_endpoint}}?code_challenge={{code_challenge}}&nonce={{nonce}}&type={{credential_type}}&user_id=some_id_of_the_user
 
 > {%
   client.global.set("code", response.body)
@@ -47,7 +47,7 @@ POST {{token_endpoint}}
 Content-type: application/x-www-form-urlencoded
 Accept: application/json
 
-grant_type=urn:ietf:params:oauth:grant-type:pre-authorized_code&pre-authorized_code={{code}}&client_id={{client_id}}&code_verifier={{code_verifier}}&pin=123456
+grant_type=urn:ietf:params:oauth:grant-type:pre-authorized_code&pre-authorized_code={{code}}&code_verifier={{code_verifier}}&pin=123456
 
 > {%
   client.test("obtain token, provided pin should be ignored  - success expected", function() {
@@ -59,7 +59,7 @@ grant_type=urn:ietf:params:oauth:grant-type:pre-authorized_code&pre-authorized_c
 ###
 
 // @no-cookie-jar
-GET {{issuer_preauth_endpoint}}?code_challenge={{code_challenge}}&nonce={{nonce}}&pin={{pin}}&type={{credential_type}}
+POST {{issuer_preauth_endpoint}}?code_challenge={{code_challenge}}&nonce={{nonce}}&pin={{pin}}&type={{credential_type}}
 
 > {%
   client.global.set("code", response.body)
@@ -75,7 +75,7 @@ POST {{token_endpoint}}
 Content-type: application/x-www-form-urlencoded
 Accept: application/json
 
-grant_type=urn:ietf:params:oauth:grant-type:pre-authorized_code&pre-authorized_code={{code}}&client_id={{client_id}}&code_verifier={{code_verifier}}&pin=11{{pin}}11
+grant_type=urn:ietf:params:oauth:grant-type:pre-authorized_code&pre-authorized_code={{code}}&code_verifier={{code_verifier}}&pin=11{{pin}}11
 
 > {%
   client.test("try to obtain token with wrong PIN - negative test ", function() {
@@ -89,7 +89,7 @@ POST {{token_endpoint}}
 Content-type: application/x-www-form-urlencoded
 Accept: application/json
 
-grant_type=urn:ietf:params:oauth:grant-type:pre-authorized_code&pre-authorized_code={{code}}&client_id={{client_id}}&code_verifier={{code_verifier}}&pin={pin}}
+grant_type=urn:ietf:params:oauth:grant-type:pre-authorized_code&pre-authorized_code={{code}}&code_verifier={{code_verifier}}&pin={pin}}
 
 > {%
   client.test("try to obtain token with correct PIN but code is already invalidated by previous wrong attempt - negative test ", function() {

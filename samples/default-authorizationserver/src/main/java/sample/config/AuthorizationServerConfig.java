@@ -49,6 +49,8 @@ import org.springframework.security.oauth2.server.authorization.config.ProviderS
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 
+import static org.springframework.security.oauth2.server.authorization.web.authentication.AnonymousPreAuthAuthenticationConverter.DEFAULT_PRE_AUTH_CLIENT;
+
 /**
  * @author Joe Grandja
  * @since 0.0.1
@@ -101,10 +103,25 @@ public class AuthorizationServerConfig {
 				.clientSettings(ClientSettings.builder().requireAuthorizationConsent(true).build())
 				.build();
 
+		RegisteredClient defaultPreAuthClient = RegisteredClient.withId(UUID.randomUUID().toString())
+				.clientId(DEFAULT_PRE_AUTH_CLIENT)
+				.clientAuthenticationMethod(ClientAuthenticationMethod.NONE)
+				.authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
+				.authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
+				.authorizationGrantType(OAuth2PreAuthCodeAuthenticationConverter.PRE_AUTH_CODE_GRANT_TYPE)
+				.redirectUri("http://127.0.0.1:8080/login/oauth2/code/messaging-client-oidc")
+				.redirectUri("http://127.0.0.1:8080/authorized")
+				.scope(OidcScopes.OPENID)
+				.scope("message.read")
+				.scope("message.write")
+				.clientSettings(ClientSettings.builder().requireAuthorizationConsent(true).build())
+				.build();
+
 		// Save registered clients in db as if in-memory
 		JdbcRegisteredClientRepository registeredClientRepository = new JdbcRegisteredClientRepository(jdbcTemplate);
 		registeredClientRepository.save(registeredClient);
 		registeredClientRepository.save(passwordlessWebClient);
+		registeredClientRepository.save(defaultPreAuthClient);
 
 		return registeredClientRepository;
 	}
