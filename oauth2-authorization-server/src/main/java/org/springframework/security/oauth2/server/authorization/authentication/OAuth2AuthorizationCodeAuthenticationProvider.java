@@ -15,12 +15,6 @@
  */
 package org.springframework.security.oauth2.server.authorization.authentication;
 
-import java.security.Principal;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
-import java.util.HashMap;
-import java.util.Map;
-
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -50,6 +44,10 @@ import org.springframework.security.oauth2.server.authorization.token.OAuth2Toke
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenGenerator;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
+
+import java.security.Principal;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.springframework.security.oauth2.server.authorization.authentication.OAuth2AuthenticationProviderUtils.getAuthenticatedClientElseThrowInvalidClient;
 
@@ -219,13 +217,6 @@ public final class OAuth2AuthorizationCodeAuthenticationProvider implements Auth
 			additionalParameters.put(OidcParameterNames.ID_TOKEN, idToken.getTokenValue());
 		}
 
-		String nonce = getAdditionalParam(authorizationRequest, "nonce");
-		if (StringUtils.hasText(nonce)) {
-			additionalParameters.put("c_nonce", nonce);
-			additionalParameters.put("c_nonce_expires_in",
-					ChronoUnit.SECONDS.between( Instant.now(), accessToken.getExpiresAt()));
-		}
-
 		return new OAuth2AccessTokenAuthenticationToken(
 				registeredClient, clientPrincipal, accessToken, refreshToken, additionalParameters);
 	}
@@ -237,8 +228,8 @@ public final class OAuth2AuthorizationCodeAuthenticationProvider implements Auth
 		}
 	}
 
-	private String getAdditionalParam(final OAuth2AuthorizationRequest authorizationRequest, final String nonce) {
-		return (String) authorizationRequest.getAdditionalParameters().get(nonce);
+	private String getAdditionalParam(final OAuth2AuthorizationRequest authorizationRequest, final String name) {
+		return (String) authorizationRequest.getAdditionalParameters().get(name);
 	}
 
 	@Override

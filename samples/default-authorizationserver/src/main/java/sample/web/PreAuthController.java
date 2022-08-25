@@ -39,8 +39,6 @@ public class PreAuthController implements Cloneable{
 	private final RegisteredClientRepository registeredClientRepository;
 	private final StringKeyGenerator authorizationCodeGenerator =
 			new Base64StringKeyGenerator(Base64.getUrlEncoder().withoutPadding(), 96);
-	private final StringKeyGenerator noncegenerator =
-			new Base64StringKeyGenerator(Base64.getUrlEncoder().withoutPadding(), 32);
 
 	public PreAuthController(final OAuth2AuthorizationService authorizationService, RegisteredClientRepository registeredClientRepository) {
 		this.authorizationService = authorizationService;
@@ -52,7 +50,6 @@ public class PreAuthController implements Cloneable{
 	public String initPreauthToken(
 			@RequestParam(value = "pin", required = false) String pin,
 			@RequestParam(value = "type", required = true) Set<String> types,
-			@RequestParam(value = "nonce", required = false) String nonce,
 			@RequestParam(value = "user_id", required = false) String userId,
 			@RequestParam(value = "code_challenge", required = false) String code_challenge) {
 		/* Most of this logic is copied from OAuth2AuthorizationCodeRequestAuthenticationProvider */
@@ -65,14 +62,6 @@ public class PreAuthController implements Cloneable{
 
 		if (StringUtils.hasText(pin)) {
 			params.put("pin", pin);
-		}
-
-		if (StringUtils.hasText(nonce)) {
-			// it is initial nonce to be used (dirty hack as someone can use the same all the time)
-			params.put("nonce", nonce);
-		}
-		else {
-			params.put("nonce", noncegenerator.generateKey());
 		}
 
 		final RegisteredClient registeredClient = registeredClientRepository.findByClientId(DEFAULT_PRE_AUTH_CLIENT);
