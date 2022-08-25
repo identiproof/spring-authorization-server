@@ -1,0 +1,55 @@
+openapi: 3.0.3
+info:
+  title: Additional PreAuth endpoint
+  description: |-
+    This specification of additional endpint in authorisation server to allow starting preauth flow
+  version: 0.0.1
+servers:
+  - url: http://localhost:9000
+paths:
+  /issuer/preauth:
+    post:
+      summary: start preauth flow
+      description: |-
+        init a preauth flow in authentication server. This method is createing a pre auth code (similar to 'code' used by code OAuth flow) which will be
+        later used to obtain authentcation token. Data passed to this method is attached to the code
+        so that later access token issed by the code will contain bussines data (like user id or credential
+        type)
+      parameters:
+        - name: pin
+          in: query
+          required: false
+          schema:
+            type: string
+          description: |-
+            pin nunber which will be required during obtaing access token by preauth flow
+          example: 6661
+        - name: type
+          in: query
+          required: true
+          schema:
+            type: array
+            items:
+              type: string
+          description: |-
+            credential type(s) to be allowed for access token which will be returned by this auth flows.
+            This is multiple parameter can appear several time in a single request.
+          example:
+            - Passport
+            - https://example.com/covidCertificate
+            - https://imsglobal.github.io/Fopenbadges-specification/Fob_v3p0.html#OpenBadgeCredential
+        - name: user_id
+          in: query
+          required: false
+          schema:
+            type: string
+          description: id (user handle) the user who is going to obtain access token. This id will be visible in resource server
+          example: abc:user1
+      responses:
+        '200':
+          description: Successful operation return a pre auth code as a text
+          content:
+            text/plain:
+              schema:
+                type: string
+      security: []
