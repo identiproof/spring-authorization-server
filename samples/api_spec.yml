@@ -11,7 +11,7 @@ paths:
     post:
       summary: start preauth flow
       description: |-
-        init a preauth flow in authentication server. This method is createing a 'code' which will be
+        init a preauth flow in authentication server. This method is createing a pre auth code (similar to 'code' used by code OAuth flow) which will be
         later used to obtain authentcation token. Data passed to this method is attached to the code
         so that later access token issed by the code will contain bussines data (like user id or credential
         type)
@@ -35,34 +35,19 @@ paths:
             credential type(s) to be allowed for access token which will be returned by this auth flows.
             This is multiple parameter can appear several time in a single request.
           example:
+            - Passport
             - https://example.com/covidCertificate
             - https://imsglobal.github.io/Fopenbadges-specification/Fob_v3p0.html#OpenBadgeCredential
-        - name: nonce
-          in: query
-          required: false
-          schema:
-            type: string
-          description: cryptographic nonce which will be returned as initial nonce when access token is obtained
-          example: 12asdf334dsz
         - name: user_id
           in: query
           required: false
           schema:
             type: string
-          description: id the user who is going to obtain access token. This id will be visible in resource server
+          description: id (user handle) the user who is going to obtain access token. This id will be visible in resource server
           example: abc:user1
-        - name: code_challenge
-          in: query
-          required: false
-          schema:
-            type: string
-          example: E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM
-          description: |-
-            PKCE code challenge to authenticate token request. When this field is passed corresonding code_verifier
-            value will be required by token endpoint to successfully process tonken request. This parameter is optional.
       responses:
         '200':
-          description: Successful operation return a 'code' as a text
+          description: Successful operation return a pre auth code as a text
           content:
             text/plain:
               schema:
