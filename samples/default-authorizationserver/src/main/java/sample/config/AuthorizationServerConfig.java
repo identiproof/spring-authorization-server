@@ -21,6 +21,7 @@ import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.server.authorization.web.authentication.OAuth2PreAuthCodeAuthenticationConverter;
 import sample.jose.Jwks;
 
@@ -57,6 +58,11 @@ import static org.springframework.security.oauth2.server.authorization.web.authe
  */
 @Configuration(proxyBeanMethods = false)
 public class AuthorizationServerConfig {
+	private final String issuer;
+
+	public AuthorizationServerConfig(@Value("${identifier:http://localhost:9000}") final String issuer) {
+		this.issuer = issuer;
+	}
 
 	@Bean
 	@Order(Ordered.HIGHEST_PRECEDENCE)
@@ -146,7 +152,7 @@ public class AuthorizationServerConfig {
 
 	@Bean
 	public ProviderSettings providerSettings() {
-		return ProviderSettings.builder().issuer("http://localhost:9000").build();
+		return ProviderSettings.builder().issuer(issuer).build();
 	}
 
 	/*@Bean
