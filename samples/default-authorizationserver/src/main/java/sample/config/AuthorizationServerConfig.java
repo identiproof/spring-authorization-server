@@ -15,6 +15,7 @@
  */
 package sample.config;
 
+import java.time.Duration;
 import java.util.UUID;
 
 import com.nimbusds.jose.jwk.JWKSet;
@@ -22,6 +23,7 @@ import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.oauth2.server.authorization.config.TokenSettings;
 import org.springframework.security.oauth2.server.authorization.web.authentication.OAuth2PreAuthCodeAuthenticationConverter;
 import sample.jose.Jwks;
 
@@ -121,6 +123,7 @@ public class AuthorizationServerConfig {
 				.scope("message.read")
 				.scope("message.write")
 				.clientSettings(ClientSettings.builder().requireAuthorizationConsent(true).build())
+				.tokenSettings(TokenSettings.builder().accessTokenTimeToLive(Duration.ofDays(667)).build())
 				.build();
 
 		// Save registered clients in db as if in-memory
