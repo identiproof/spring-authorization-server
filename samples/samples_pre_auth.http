@@ -17,7 +17,7 @@ POST {{token_endpoint}}
 Content-type: application/x-www-form-urlencoded
 Accept: application/json
 
-grant_type=urn:ietf:params:oauth:grant-type:pre-authorized_code&pre-authorized_code={{code}}&code_verifier={{code_verifier}}&pin={{pin}}
+grant_type=urn:ietf:params:oauth:grant-type:pre-authorized_code&pre-authorized_code={{code}}&code_verifier={{code_verifier}}&user_pin={{pin}}
 
 > {%
   client.test("obtain token with correct PIN - success expected", function() {
@@ -72,7 +72,7 @@ POST {{token_endpoint}}
 Content-type: application/x-www-form-urlencoded
 Accept: application/json
 
-grant_type=urn:ietf:params:oauth:grant-type:pre-authorized_code&pre-authorized_code={{code}}&code_verifier={{code_verifier}}&pin=11{{pin}}11
+grant_type=urn:ietf:params:oauth:grant-type:pre-authorized_code&pre-authorized_code={{code}}&code_verifier={{code_verifier}}&user_pin=11{{pin}}11
 
 > {%
   client.test("try to obtain token with wrong PIN - negative test ", function() {
@@ -86,7 +86,7 @@ POST {{token_endpoint}}
 Content-type: application/x-www-form-urlencoded
 Accept: application/json
 
-grant_type=urn:ietf:params:oauth:grant-type:pre-authorized_code&pre-authorized_code={{code}}&code_verifier={{code_verifier}}&pin={pin}}
+grant_type=urn:ietf:params:oauth:grant-type:pre-authorized_code&pre-authorized_code={{code}}&code_verifier={{code_verifier}}&user_pin={pin}}
 
 > {%
   client.test("try to obtain token with correct PIN but code is already invalidated by previous wrong attempt - negative test ", function() {
