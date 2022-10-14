@@ -119,7 +119,7 @@ public final class OAuth2AuthorizationCodeAuthenticationProvider implements Auth
 
 		String expectedPin = getAdditionalParam(authorizationRequest, "pin");
 		if (StringUtils.hasText(expectedPin)) {
-			final String actualPin = (String) ((OAuth2AuthorizationCodeAuthenticationToken) authentication).getAdditionalParameters().get("pin");
+			final String actualPin = (String) ((OAuth2AuthorizationCodeAuthenticationToken) authentication).getAdditionalParameters().get("user_pin");
 			if (!expectedPin.equals(actualPin)) {
 				// Invalidate the authorization code given that someone tries wrong PIN - just to avoid brute force
 				invalidateCode(authorization, authorizationCode);

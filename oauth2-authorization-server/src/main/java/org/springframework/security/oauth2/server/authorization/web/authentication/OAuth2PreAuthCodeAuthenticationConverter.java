@@ -33,7 +33,7 @@ import java.util.Map;
 public final class OAuth2PreAuthCodeAuthenticationConverter implements AuthenticationConverter {
 	public  interface OAuth2PreAuthCodeParameterNames {
 		String PRE_AUTHORIZED_CODE = "pre-authorized_code";
-		String PIN = "pin";
+		String PIN = "user_pin";
 	}
 	public static final AuthorizationGrantType PRE_AUTH_CODE_GRANT_TYPE = new AuthorizationGrantType("urn:ietf:params:oauth:grant-type:pre-authorized_code");
 
