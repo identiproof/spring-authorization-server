@@ -15,12 +15,15 @@
  */
 package sample.config;
 
+import java.time.Duration;
 import java.util.UUID;
 
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.oauth2.server.authorization.config.TokenSettings;
 import org.springframework.security.oauth2.server.authorization.web.authentication.OAuth2PreAuthCodeAuthenticationConverter;
 import sample.jose.Jwks;
 
@@ -49,12 +52,19 @@ import org.springframework.security.oauth2.server.authorization.config.ProviderS
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 
+import static org.springframework.security.oauth2.server.authorization.web.authentication.AnonymousPreAuthAuthenticationConverter.DEFAULT_PRE_AUTH_CLIENT;
+
 /**
  * @author Joe Grandja
  * @since 0.0.1
  */
 @Configuration(proxyBeanMethods = false)
 public class AuthorizationServerConfig {
+	private final String issuer;
+
+	public AuthorizationServerConfig(@Value("${identifier:http://localhost:9000}") final String issuer) {
+		this.issuer = issuer;
+	}
 
 	@Bean
 	@Order(Ordered.HIGHEST_PRECEDENCE)
@@ -101,10 +111,26 @@ public class AuthorizationServerConfig {
 				.clientSettings(ClientSettings.builder().requireAuthorizationConsent(true).build())
 				.build();
 
+		RegisteredClient defaultPreAuthClient = RegisteredClient.withId(UUID.randomUUID().toString())
+				.clientId(DEFAULT_PRE_AUTH_CLIENT)
+				.clientAuthenticationMethod(ClientAuthenticationMethod.NONE)
+				.authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
+				.authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
+				.authorizationGrantType(OAuth2PreAuthCodeAuthenticationConverter.PRE_AUTH_CODE_GRANT_TYPE)
+				.redirectUri("http://127.0.0.1:8080/login/oauth2/code/messaging-client-oidc")
+				.redirectUri("http://127.0.0.1:8080/authorized")
+				.scope(OidcScopes.OPENID)
+				.scope("message.read")
+				.scope("message.write")
+				.clientSettings(ClientSettings.builder().requireAuthorizationConsent(true).build())
+				.tokenSettings(TokenSettings.builder().accessTokenTimeToLive(Duration.ofDays(667)).build())
+				.build();
+
 		// Save registered clients in db as if in-memory
 		JdbcRegisteredClientRepository registeredClientRepository = new JdbcRegisteredClientRepository(jdbcTemplate);
 		registeredClientRepository.save(registeredClient);
 		registeredClientRepository.save(passwordlessWebClient);
+		registeredClientRepository.save(defaultPreAuthClient);
 
 		return registeredClientRepository;
 	}
@@ -129,7 +155,7 @@ public class AuthorizationServerConfig {
 
 	@Bean
 	public ProviderSettings providerSettings() {
-		return ProviderSettings.builder().issuer("http://localhost:9000").build();
+		return ProviderSettings.builder().issuer(issuer).build();
 	}
 
 	/*@Bean

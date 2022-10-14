@@ -91,6 +91,10 @@ final class CodeVerifierAuthenticator {
 			if (registeredClient.getClientSettings().isRequireProofKey()) {
 				throwInvalidGrant(PkceParameterNames.CODE_CHALLENGE);
 			} else {
+				if (authorizationPreAuthCodeGrant(parameters) && null == parameters.get(PkceParameterNames.CODE_VERIFIER)) {
+					// PKCE is optional for preAuthCodeGrant
+					return true;
+				}
 				return false;
 			}
 		}
