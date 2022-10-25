@@ -50,16 +50,7 @@ public final class AnonymousPreAuthAuthenticationConverter implements Authentica
 
 		MultiValueMap<String, String> parameters = OAuth2EndpointUtils.getParameters(request);
 
-		// client_id (REQUIRED for public clients)
 		String clientId = parameters.getFirst(OAuth2ParameterNames.CLIENT_ID);
-		if (clientId == null) {
-			// There is no client_id specified so 'default' client for perauth should be used
-			clientId = DEFAULT_PRE_AUTH_CLIENT;
-
-		} else if (!StringUtils.hasText(clientId) ||
-				parameters.get(OAuth2ParameterNames.CLIENT_ID).size() != 1) {
-			throw new OAuth2AuthenticationException(OAuth2ErrorCodes.INVALID_REQUEST);
-		}
 
 		parameters.remove(OAuth2ParameterNames.CLIENT_ID);
 

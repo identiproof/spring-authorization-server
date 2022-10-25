@@ -7,13 +7,18 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.crypto.keygen.Base64StringKeyGenerator;
 import org.springframework.security.crypto.keygen.StringKeyGenerator;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
+import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.core.OAuth2AuthorizationCode;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
+import org.springframework.security.oauth2.core.oidc.OidcScopes;
 import org.springframework.security.oauth2.server.authorization.OAuth2Authorization;
 import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService;
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2AuthorizationCodeRequestAuthenticationToken;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
+import org.springframework.security.oauth2.server.authorization.config.ClientSettings;
+import org.springframework.security.oauth2.server.authorization.config.TokenSettings;
+import org.springframework.security.oauth2.server.authorization.web.authentication.OAuth2PreAuthCodeAuthenticationConverter;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,12 +26,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.security.Principal;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Set;
+import java.util.UUID;
 
 import static org.springframework.security.oauth2.server.authorization.web.authentication.AnonymousPreAuthAuthenticationConverter.DEFAULT_PRE_AUTH_CLIENT;
 
@@ -51,6 +58,7 @@ public class PreAuthController implements Cloneable{
 			@RequestParam(value = "pin", required = false) String pin,
 			@RequestParam(value = "type", required = true) Set<String> types,
 			@RequestParam(value = "user_id", required = false) String userId,
+			@RequestParam(value = "client_id", required = false) String clientId,
 			@RequestParam(value = "code_challenge", required = false) String code_challenge) {
 		/* Most of this logic is copied from OAuth2AuthorizationCodeRequestAuthenticationProvider */
 		final HashMap<String, Object> params = new HashMap<>();
@@ -60,11 +68,33 @@ public class PreAuthController implements Cloneable{
 			params.put("code_challenge_method", "S256");
 		}
 
+		RegisteredClient registeredClient = registeredClientRepository.findByClientId(DEFAULT_PRE_AUTH_CLIENT);
+		if(StringUtils.hasText(clientId)) {
+			registeredClient = registeredClientRepository.findByClientId(clientId);
+			if(null == registeredClient) {
+				//currently no-auth to auth server is set - so refresh token won't work
+				registeredClient = RegisteredClient.withId(UUID.randomUUID().toString())
+						.clientId(clientId)
+						.clientAuthenticationMethod(ClientAuthenticationMethod.NONE)
+						.authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
+						.authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
+						.authorizationGrantType(OAuth2PreAuthCodeAuthenticationConverter.PRE_AUTH_CODE_GRANT_TYPE)
+						.redirectUri("http://127.0.0.1:8080/login/oauth2/code/messaging-client-oidc")
+						.redirectUri("http://127.0.0.1:8080/authorized")
+						.scope(OidcScopes.OPENID)
+						.scope("message.read")
+						.scope("message.write")
+						.clientSettings(ClientSettings.builder().requireAuthorizationConsent(true).build())
+						.tokenSettings(TokenSettings.builder().accessTokenTimeToLive(Duration.ofDays(667)).build())
+						.build();
+				registeredClientRepository.save(registeredClient);
+			}
+		}
+
 		if (StringUtils.hasText(pin)) {
 			params.put("pin", pin);
 		}
 
-		final RegisteredClient registeredClient = registeredClientRepository.findByClientId(DEFAULT_PRE_AUTH_CLIENT);
 		final User user = new User(StringUtils.trimAllWhitespace(userId), "*****",
 				Collections.emptyList());
 		final UsernamePasswordAuthenticationToken principal = new UsernamePasswordAuthenticationToken(user, null,
